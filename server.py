@@ -1,8 +1,10 @@
 import json
+import base64
 from datetime import datetime, time, timedelta, timezone
 from flask import Flask, jsonify, request
 import firebase_admin
 from firebase_admin import credentials, firestore
+import os
 
 LOCAL_TZ = timezone(timedelta(hours=5, minutes=30))
 DEFAULT_SHIFT_START = time(9, 0, 0)
@@ -11,7 +13,13 @@ HALF_DAY_THRESHOLD_HOURS = 4.5
 recent_scans = {}
 DEBOUNCE_SECONDS = 60
 
-cred = credentials.Certificate("serviceAccountKey.json")
+cred_b64 = os.environ.get("FIREBASE_CREDS_B64")
+if cred_b64:
+    cred_dict = json.loads(base64.b64decode(cred_b64))
+    cred = credentials.Certificate(cred_dict)
+else:
+    cred = credentials.Certificate("serviceAccountKey.json")
+
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
